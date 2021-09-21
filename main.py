@@ -70,7 +70,7 @@ def button(update: Update, context: CallbackContext) -> None:
             temp=[InlineKeyboardButton(team,callback_data=team+":Team")]
             keyboard.append(temp)
         reply_markup = InlineKeyboardMarkup(keyboard)
-        query.message.reply_text('This are the current available matches : ', reply_markup=reply_markup)
+        query.edit_message_text('This are the current available matches : ', reply_markup=reply_markup)
     if (":Team" in query.data):
         highlights=set()
         match = query.data.split(":", 1)[0]
@@ -78,7 +78,7 @@ def button(update: Update, context: CallbackContext) -> None:
             if match == attribute['title'].strip():
                 for param in attribute['videos']:
                     highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
-        query.message.reply_text("Enjoy the highlights of : " + match)
+        query.edit_message_text("Enjoy the highlights of : " + match)
         for highlight in highlights:
             query.message.reply_text(highlight)
 
@@ -118,7 +118,7 @@ def highlights(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    highlights(update,context)
+    update.message.reply_text("Sorry I don't understand that, Write /highlights to enable my power")
     # #telebot=telegram.Bot(Constants.Api_Key)
     # telebot = bot.Bot(Constants.Api_Key)
     # team=update.message.text
