@@ -41,18 +41,8 @@ def start(update, context):
     """Send a message when the command /start is issued."""
 
     """Sends a message with three inline buttons attached."""
-    keyboard = [
-        [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2'),
-        ],
-        [InlineKeyboardButton("Option 3", callback_data='3')],
-    ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
     name= update.message.from_user.first_name
-    print(name)
-    #+  'Please choose:', reply_markup=reply_markup
 
     update.message.reply_text("Hello " +name + " \n ")
 
@@ -62,13 +52,65 @@ def button(update: Update, context: CallbackContext) -> None:
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
+    jsonRes = requests.get('https://www.scorebat.com/video-api/v3/').json()
+    teamsSet = set()
+    if("-Leag" in query.data):
+        league=query.data.split("-",1)[0]
+        if(league != "CHAMPIONS LEAGUE" and league != "Other" ) :
+            for attribute in jsonRes['response']:
+                if league == attribute['competition']:
+                    teamsSet.add(attribute['title'].strip())
 
-    query.edit_message_text(text=f"Selected option: {query.data}")
+        else :
+            for attribute in jsonRes['response']:
+                if league in attribute['competition']:
+                    teamsSet.add(attribute['title'].strip())
+        keyboard=[]
+        for team in teamsSet :
+            temp=[InlineKeyboardButton(team,callback_data=team+":Team")]
+            keyboard.append(temp)
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        query.message.reply_text('This are the current available matches : ', reply_markup=reply_markup)
+    if (":Team" in query.data):
+        highlights=set()
+        match = query.data.split(":", 1)[0]
+        for attribute in jsonRes['response']:
+            if match == attribute['title'].strip():
+                for param in attribute['videos']:
+                    highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
+        query.message.reply_text("Enjoy the highlights of : " + match)
+        for highlight in highlights:
+            query.message.reply_text(highlight)
 
-def help(update, context):
+
+    # jsonReq = requests.get('https://www.scorebat.com/video-api/v3/').json()
+    # highlights = set()
+    # for match in jsonReq['response']:
+    #     if league in match['competition']:
+    #         for param in match['videos']:
+    #             highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
+    #
+    # query.message.reply_text("Enjoy :")
+    # for highlight in highlights:
+    #     query.message.reply_text(highlight)
+    #     time.sleep(1)
+    #query.edit_message_text(text=f"Selected option: {query.data}")
+
+def highlights(update, context):
     """Send a message when the command /help is issued."""
+    keyboard = [
 
-    update.message.reply_text('Help!')
+            [InlineKeyboardButton("Seria A", callback_data='ITALY: Serie A-Leag')],
+            [InlineKeyboardButton("France Ligue 1", callback_data='FRANCE: Ligue 1-Leag')],
+            [InlineKeyboardButton("Premier League", callback_data='ENGLAND: Premier League-Leag')],
+            [InlineKeyboardButton("Spain La Liga", callback_data='SPAIN: La Liga-Leag') ],
+            [InlineKeyboardButton("Germany BundesLiga", callback_data='GERMANY: Bundesliga-Leag')],
+            [InlineKeyboardButton("Champions League", callback_data='CHAMPIONS LEAGUE-Leag')],
+            [InlineKeyboardButton("Other", callback_data='Other-Leag')],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text('Please choose the relevant League : ' , reply_markup=reply_markup)
 
 
 
@@ -76,30 +118,33 @@ def help(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    #telebot=telegram.Bot("1969164922:AAFarz1cKoaP3l8ONCtK9ae8SU-13tAJljM")
-    telebot = bot.Bot(Constants.Api_Key)
-    team=update.message.text
+    highlights(update,context)
+    # #telebot=telegram.Bot(Constants.Api_Key)
+    # telebot = bot.Bot(Constants.Api_Key)
+    # team=update.message.text
+    #
+    # teamsJson = requests.get('https://www.scorebat.com/video-api/v3/').json()
+    # highlights=[]
+    # for teams in teamsJson['response'] :
+    #     if(team in teams['title']):
+    #         for param in teams['videos']:
+    #              highlights.append(param['embed'].split("src='",1)[1].split("'",1)[0])
+    #
+    # update.message.reply_text("Enjoy ")
+    # for highlight in highlights:
+    #     update.message.reply_text(highlight)
+    #     time.sleep(1)
 
-    teamsJson = requests.get('https://www.scorebat.com/video-api/v3/').json()
-    highlights=[]
-    for teams in teamsJson['response'] :
-        if(team in teams['title']):
-            for param in teams['videos']:
-                 highlights.append(param['embed'].split("src='",1)[1].split("'",1)[0])
+    # videoUrl="https://www.youtube.com/watch?v=6b-1jjvEOI4"
+    # #update.message.reply_document(videoUrl)
+    # photoUrl="https://upload.wikimedia.org/wikipedia/he/thumb/a/a2/Hapoel_Haifa_Football_Club_Logo.png/200px-Hapoel_Haifa_Football_Club_Logo.png"
+    # #telebot.sendPhoto(chat_id=update.message.chat.id,photo=photoUrl)
+    # #videoTry=urllib.request.urlretrieve(videoUrl, 'video_name.mp4')
+    # #file_id=telebot.sendVideo(chat_id=update.message.chat.id,video=open("videotry.mp4","rb"),timeout=10000)
+    # #telebot.sendVideo(chat_id=update.message.chat.id,video="BAACAgQAAxkDAAIBD2FIxJ7M2-rbn1TC9wVr5HJ83UGcAAIjDAACK2hJUjhAQxWqqgHWIAQ")
+    # #print(file_id)
+    # #telebot.sendDocument(chat_id=update.message.chat.id,document=videoUrl)
 
-    update.message.reply_text("Enjoy ")
-    for highlight in highlights:
-        update.message.reply_text(highlight)
-        time.sleep(1)
-    videoUrl="https://www.youtube.com/watch?v=6b-1jjvEOI4"
-    #update.message.reply_document(videoUrl)
-    photoUrl="https://upload.wikimedia.org/wikipedia/he/thumb/a/a2/Hapoel_Haifa_Football_Club_Logo.png/200px-Hapoel_Haifa_Football_Club_Logo.png"
-    #telebot.sendPhoto(chat_id=update.message.chat.id,photo=photoUrl)
-    #videoTry=urllib.request.urlretrieve(videoUrl, 'video_name.mp4')
-    #file_id=telebot.sendVideo(chat_id=update.message.chat.id,video=open("videotry.mp4","rb"),timeout=10000)
-    #telebot.sendVideo(chat_id=update.message.chat.id,video="BAACAgQAAxkDAAIBD2FIxJ7M2-rbn1TC9wVr5HJ83UGcAAIjDAACK2hJUjhAQxWqqgHWIAQ")
-    #print(file_id)
-    #telebot.sendDocument(chat_id=update.message.chat.id,document=videoUrl)
 
 
 def error(update, context):
@@ -113,8 +158,6 @@ def main():
     # Make sure to set use_context=True to use the new context based callbacks
     # Post version 12 this will no longer be necessary
     updater = Updater(Constants.Api_Key,base_url="http://localhost:8081/bot",use_context=True)
-    pid=os.getpid()
-    print(pid)
     #updater.bot.logOut()
     #bot=telegram.Bot
 
@@ -124,7 +167,7 @@ def main():
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("hello", start))
-    dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("highlights", highlights))
     dp.add_handler(CallbackQueryHandler(button))
     # on noncommand i.e message - echo the message on Telegram
     dp.add_handler(MessageHandler(Filters.text, echo))
