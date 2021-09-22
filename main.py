@@ -24,17 +24,19 @@ import urllib.request
 import requests
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler, \
+    PollHandler
 
 # Enable logging
 import Constants
+from Keyboards import Keyboards
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-
+otherKeyboard=Keyboards()
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
@@ -49,14 +51,15 @@ def start(update, context):
 def button(update: Update, context: CallbackContext) -> None:
     """Parses the CallbackQuery and updates the message text."""
     query = update.callback_query
+
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
     jsonRes = requests.get('https://www.scorebat.com/video-api/v3/').json()
     teamsSet = set()
-    if("-Leag" in query.data):
+    if("-Leag" in query.data and "Other" not in query.data):
         league=query.data.split("-",1)[0]
-        if(league != "CHAMPIONS LEAGUE" and league != "Other" ) :
+        if(league != "CHAMPIONS LEAGUE") :
             for attribute in jsonRes['response']:
                 if league == attribute['competition']:
                     teamsSet.add(attribute['title'].strip())
@@ -81,7 +84,13 @@ def button(update: Update, context: CallbackContext) -> None:
         query.edit_message_text("Enjoy the highlights of : " + match)
         for highlight in highlights:
             query.message.reply_text(highlight)
-
+    if("Other" in query.data):
+        reply_markup=InlineKeyboardMarkup(otherKeyboard.relevantKeyBoard(0))
+        query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
+    if("Men" in query.data):
+        i=query.data.split(":",1)[1]
+        reply_markup = InlineKeyboardMarkup(otherKeyboard.relevantKeyBoard(int(i)))
+        query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
 
     # jsonReq = requests.get('https://www.scorebat.com/video-api/v3/').json()
     # highlights = set()
@@ -98,17 +107,8 @@ def button(update: Update, context: CallbackContext) -> None:
 
 def highlights(update, context):
     """Send a message when the command /help is issued."""
-    keyboard = [
-
-            [InlineKeyboardButton("Seria A", callback_data='ITALY: Serie A-Leag')],
-            [InlineKeyboardButton("France Ligue 1", callback_data='FRANCE: Ligue 1-Leag')],
-            [InlineKeyboardButton("Premier League", callback_data='ENGLAND: Premier League-Leag')],
-            [InlineKeyboardButton("Spain La Liga", callback_data='SPAIN: La Liga-Leag') ],
-            [InlineKeyboardButton("Germany BundesLiga", callback_data='GERMANY: Bundesliga-Leag')],
-            [InlineKeyboardButton("Champions League", callback_data='CHAMPIONS LEAGUE-Leag')],
-            [InlineKeyboardButton("Other", callback_data='Other-Leag')],
-    ]
-
+    keyboard = Constants.mainKeyboard
+    #otherKeyboard=Keyboards()
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose the relevant League : ' , reply_markup=reply_markup)
 
@@ -151,18 +151,20 @@ def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
+def handlePoll(update,context):
+    print("im here")
 
 def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    # Make sure to set use_context=True to use the new context based callbacks
-    # Post version 12 this will no longer be necessary
+    #base_url="http://localhost:8081/bot" // Add it to function in order to run Localy
     updater = Updater(Constants.Api_Key,base_url="http://localhost:8081/bot",use_context=True)
     #updater.bot.logOut()
     #bot=telegram.Bot
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
+    dp.add_handler(PollHandler(handlePoll))
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
