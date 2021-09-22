@@ -17,15 +17,14 @@ bot.
 
 
 import logging
-import os
-import time
-import urllib.request
 
+from datetime import datetime
+
+import pytz
 import requests
 import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, bot
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler, \
-    PollHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
 
 # Enable logging
 import Constants
@@ -43,9 +42,9 @@ def start(update, context):
     """Send a message when the command /start is issued."""
 
     """Sends a message with three inline buttons attached."""
-
+    if (not pollCheck(update.message.date)):
+        return
     name= update.message.from_user.first_name
-
     update.message.reply_text("Hello " +name + " \n ")
 
 def button(update: Update, context: CallbackContext) -> None:
@@ -72,6 +71,7 @@ def button(update: Update, context: CallbackContext) -> None:
         for team in teamsSet :
             temp=[InlineKeyboardButton(team,callback_data=team+":Team")]
             keyboard.append(temp)
+        keyboard.append([InlineKeyboardButton("🏠", callback_data="Home")])
         reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_text('This are the current available matches : ', reply_markup=reply_markup)
     if (":Team" in query.data):
@@ -81,7 +81,8 @@ def button(update: Update, context: CallbackContext) -> None:
             if match == attribute['title'].strip():
                 for param in attribute['videos']:
                     highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
-        query.edit_message_text("Enjoy the highlights of : " + match)
+                    break
+        query.message.reply_text("Enjoy the highlights of : " + match)
         for highlight in highlights:
             query.message.reply_text(highlight)
     if("Other" in query.data):
@@ -91,24 +92,17 @@ def button(update: Update, context: CallbackContext) -> None:
         i=query.data.split(":",1)[1]
         reply_markup = InlineKeyboardMarkup(otherKeyboard.relevantKeyBoard(int(i)))
         query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
+    if("Home" in query.data):
+        keyboard = Constants.mainKeyboard
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
 
-    # jsonReq = requests.get('https://www.scorebat.com/video-api/v3/').json()
-    # highlights = set()
-    # for match in jsonReq['response']:
-    #     if league in match['competition']:
-    #         for param in match['videos']:
-    #             highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
-    #
-    # query.message.reply_text("Enjoy :")
-    # for highlight in highlights:
-    #     query.message.reply_text(highlight)
-    #     time.sleep(1)
-    #query.edit_message_text(text=f"Selected option: {query.data}")
 
 def highlights(update, context):
     """Send a message when the command /help is issued."""
+    if(not pollCheck(update.message.date)):
+        return
     keyboard = Constants.mainKeyboard
-    #otherKeyboard=Keyboards()
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose the relevant League : ' , reply_markup=reply_markup)
 
@@ -118,32 +112,10 @@ def highlights(update, context):
 
 def echo(update, context):
     """Echo the user message."""
+    if (not pollCheck(update.message.date)):
+        return
     update.message.reply_text("Sorry I don't understand that, Write /highlights to enable my power")
-    # #telebot=telegram.Bot(Constants.Api_Key)
-    # telebot = bot.Bot(Constants.Api_Key)
-    # team=update.message.text
-    #
-    # teamsJson = requests.get('https://www.scorebat.com/video-api/v3/').json()
-    # highlights=[]
-    # for teams in teamsJson['response'] :
-    #     if(team in teams['title']):
-    #         for param in teams['videos']:
-    #              highlights.append(param['embed'].split("src='",1)[1].split("'",1)[0])
-    #
-    # update.message.reply_text("Enjoy ")
-    # for highlight in highlights:
-    #     update.message.reply_text(highlight)
-    #     time.sleep(1)
 
-    # videoUrl="https://www.youtube.com/watch?v=6b-1jjvEOI4"
-    # #update.message.reply_document(videoUrl)
-    # photoUrl="https://upload.wikimedia.org/wikipedia/he/thumb/a/a2/Hapoel_Haifa_Football_Club_Logo.png/200px-Hapoel_Haifa_Football_Club_Logo.png"
-    # #telebot.sendPhoto(chat_id=update.message.chat.id,photo=photoUrl)
-    # #videoTry=urllib.request.urlretrieve(videoUrl, 'video_name.mp4')
-    # #file_id=telebot.sendVideo(chat_id=update.message.chat.id,video=open("videotry.mp4","rb"),timeout=10000)
-    # #telebot.sendVideo(chat_id=update.message.chat.id,video="BAACAgQAAxkDAAIBD2FIxJ7M2-rbn1TC9wVr5HJ83UGcAAIjDAACK2hJUjhAQxWqqgHWIAQ")
-    # #print(file_id)
-    # #telebot.sendDocument(chat_id=update.message.chat.id,document=videoUrl)
 
 
 
@@ -151,20 +123,20 @@ def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
-def handlePoll(update,context):
-    print("im here")
+def pollCheck(msgDate):
+    datediff=int((datetime.now(pytz.utc)-msgDate).days)
+    return (datediff==0)
+
 
 def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     #base_url="http://localhost:8081/bot" // Add it to function in order to run Localy
-    updater = Updater(Constants.Api_Key,base_url="http://localhost:8081/bot",use_context=True)
-    #updater.bot.logOut()
-    #bot=telegram.Bot
+    updater = Updater(Constants.Api_Key,use_context=True)
+
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
-    dp.add_handler(PollHandler(handlePoll))
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))

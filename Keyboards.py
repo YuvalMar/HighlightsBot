@@ -34,15 +34,15 @@ class Keyboards:
             else:
                 i+=1
                 if(i==1):
-                    keyboard.append([InlineKeyboardButton("Next ->", callback_data="Men:" + str(i))])
+                    keyboard.append([InlineKeyboardButton("➡", callback_data="Men:" + str(i))])
                 if(i+1> len(otherLeagues)/5):
-                    keyboard.append([InlineKeyboardButton("<- Prev", callback_data="Men:" +str(i-2))])
+                    keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" +str(i-2))])
                 if(len(otherLeagues)%5==0 and i+1==len(otherLeagues)/5):
-                    keyboard.append([InlineKeyboardButton("<- Prev", callback_data="Men:" + str(i - 2))])
+                    keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" + str(i - 2))])
                 else:
                     if (i>1):
-                        keyboard.append([InlineKeyboardButton("<- Prev", callback_data="Men:" +str(i-2)),InlineKeyboardButton("Next ->", callback_data="Men:" +str(i))])
-                        #keyboard.append([InlineKeyboardButton("Next ->", callback_data="Men:" +str(i))])
+                        keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" +str(i-2)),InlineKeyboardButton("➡", callback_data="Men:" +str(i))])
+                keyboard.append([InlineKeyboardButton("🏠", callback_data="Home" )])
                 tempKeyBoard.append(keyboard)
                 keyboard=[]
                 j=0
