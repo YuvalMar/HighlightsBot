@@ -100,8 +100,7 @@ def button(update: Update, context: CallbackContext) -> None:
 
 def highlights(update, context):
     """Send a message when the command /help is issued."""
-    if(not pollCheck(update.message.date)):
-        return
+
     keyboard = Constants.mainKeyboard
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose the relevant League : ' , reply_markup=reply_markup)
@@ -112,8 +111,7 @@ def highlights(update, context):
 
 def echo(update, context):
     """Echo the user message."""
-    if (not pollCheck(update.message.date)):
-        return
+
     update.message.reply_text("Sorry I don't understand that, Write /highlights to enable my power")
 
 
@@ -125,6 +123,7 @@ def error(update, context):
 
 def pollCheck(msgDate):
     datediff=int((datetime.now(pytz.utc)-msgDate).days)
+    print(datediff)
     return (datediff==0)
 
 
@@ -132,7 +131,7 @@ def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     #base_url="http://localhost:8081/bot" // Add it to function in order to run Localy
-    updater = Updater(Constants.Api_Key,use_context=True)
+    updater = Updater(Constants.Api_Key,base_url="http://localhost:8081/bot",use_context=True)
 
 
     # Get the dispatcher to register handlers

@@ -31,13 +31,12 @@ class Keyboards:
                 temp = [InlineKeyboardButton(league, callback_data=league + "-Leag")]
                 keyboard.append(temp)
                 j+=1
+
             else:
                 i+=1
                 if(i==1):
                     keyboard.append([InlineKeyboardButton("➡", callback_data="Men:" + str(i))])
-                if(i+1> len(otherLeagues)/5):
-                    keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" +str(i-2))])
-                if(len(otherLeagues)%5==0 and i+1==len(otherLeagues)/5):
+                if(len(otherLeagues)%5==0 and i==len(otherLeagues)/5):
                     keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" + str(i - 2))])
                 else:
                     if (i>1):
@@ -46,7 +45,9 @@ class Keyboards:
                 tempKeyBoard.append(keyboard)
                 keyboard=[]
                 j=0
-
+        if(j!=0):
+            keyboard.append([InlineKeyboardButton("⬅", callback_data="Men:" + str(i - 1))])
+            tempKeyBoard.append(keyboard)
         return tempKeyBoard
     def relevantKeyBoard(self,i):
         return self.otherKeyBoard[i]
