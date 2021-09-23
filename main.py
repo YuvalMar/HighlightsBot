@@ -18,7 +18,7 @@ bot.
 import logging
 
 import os
-PORT = int(os.environ.get('PORT', 5000))
+PORT = int(os.environ.get('PORT', 3000))
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
 
@@ -128,8 +128,9 @@ def main():
     #updater.start_polling()
     updater.start_webhook(listen="0.0.0.0",
                           port=int(PORT),
-                          url_path=Constants.Api_Key)
-    updater.bot.setWebhook('https://highlightsbot.herokuapp.com/' + Constants.Api_Key)
+                          url_path=Constants.Api_Key,
+                          webhook_url='https://highlightsbot.herokuapp.com/' + Constants.Api_Key)
+
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
