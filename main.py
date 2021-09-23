@@ -56,7 +56,7 @@ def button(update: Update, context: CallbackContext) -> None:
 
     if("-Leag" in query.data and "Other" not in query.data):
         reply_markup = InlineKeyboardMarkup(queryHandlers.leagueHandler(query.data))
-        query.edit_message_text('This are the current available matches : ', reply_markup=reply_markup)
+        query.edit_message_text('Current available matches : ', reply_markup=reply_markup)
 
     if (":Team" in query.data):
         match = query.data.split(":", 1)[0]
