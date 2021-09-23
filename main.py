@@ -15,37 +15,34 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-
 import logging
 
-from datetime import datetime
 
-import pytz
-import requests
-import telegram
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
 
 # Enable logging
 import Constants
+import queryHandlers
+
 from Keyboards import Keyboards
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-
+flag=False
 otherKeyboard=Keyboards()
+if(not otherKeyboard.getLeagues()):
+    flag=True
+
+
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
-    """Send a message when the command /start is issued."""
 
-    """Sends a message with three inline buttons attached."""
-    if (not pollCheck(update.message.date)):
-        return
     name= update.message.from_user.first_name
-    update.message.reply_text("Hello " +name + " \n ")
+    update.message.reply_text("Hello " +name + " , Please use /highlights to enable my power. ")
 
 def button(update: Update, context: CallbackContext) -> None:
     """Parses the CallbackQuery and updates the message text."""
@@ -54,49 +51,39 @@ def button(update: Update, context: CallbackContext) -> None:
     # CallbackQueries need to be answered, even if no notification to the user is needed
     # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
     query.answer()
-    jsonRes = requests.get('https://www.scorebat.com/video-api/v3/').json()
-    teamsSet = set()
-    if("-Leag" in query.data and "Other" not in query.data):
-        league=query.data.split("-",1)[0]
-        if(league != "CHAMPIONS LEAGUE") :
-            for attribute in jsonRes['response']:
-                if league == attribute['competition']:
-                    teamsSet.add(attribute['title'].strip())
 
-        else :
-            for attribute in jsonRes['response']:
-                if league in attribute['competition']:
-                    teamsSet.add(attribute['title'].strip())
-        keyboard=[]
-        for team in teamsSet :
-            temp=[InlineKeyboardButton(team,callback_data=team+":Team")]
-            keyboard.append(temp)
-        keyboard.append([InlineKeyboardButton("🏠", callback_data="Home")])
-        reply_markup = InlineKeyboardMarkup(keyboard)
+    if("-Leag" in query.data and "Other" not in query.data):
+        reply_markup = InlineKeyboardMarkup(queryHandlers.leagueHandler(query.data))
         query.edit_message_text('This are the current available matches : ', reply_markup=reply_markup)
+
     if (":Team" in query.data):
-        highlights=set()
         match = query.data.split(":", 1)[0]
-        for attribute in jsonRes['response']:
-            if match == attribute['title'].strip():
-                for param in attribute['videos']:
-                    highlights.add(param['embed'].split("src='", 1)[1].split("'", 1)[0])
-                    break
         query.message.reply_text("Enjoy the highlights of : " + match)
-        for highlight in highlights:
-            query.message.reply_text(highlight)
+        keyboard=[]
+        keyboard.append([InlineKeyboardButton("Close", callback_data="Close"),InlineKeyboardButton("🏠", callback_data="NewHome")])
+        reply_markup=InlineKeyboardMarkup(keyboard)
+        query.message.reply_text(queryHandlers.teamHandler(match),reply_markup=reply_markup)
+
     if("Other" in query.data):
         reply_markup=InlineKeyboardMarkup(otherKeyboard.relevantKeyBoard(0))
         query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
+
     if("Men" in query.data):
         i=query.data.split(":",1)[1]
         reply_markup = InlineKeyboardMarkup(otherKeyboard.relevantKeyBoard(int(i)))
         query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
+
     if("Home" in query.data):
         keyboard = Constants.mainKeyboard
         reply_markup = InlineKeyboardMarkup(keyboard)
-        query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
 
+        if("New" not in query.data):
+            query.edit_message_text('Please choose the relevant League : ', reply_markup=reply_markup)
+        else:
+            query.message.reply_text('You are a true fan, Please choose the relevant league : ', reply_markup=reply_markup)
+
+    if("Close" in query.data):
+        query.message.reply_text("See you soon!")
 
 def highlights(update, context):
     """Send a message when the command /help is issued."""
@@ -105,35 +92,23 @@ def highlights(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text('Please choose the relevant League : ' , reply_markup=reply_markup)
 
-
-
-
-
 def echo(update, context):
     """Echo the user message."""
-
     update.message.reply_text("Sorry I don't understand that, Write /highlights to enable my power")
-
-
 
 
 def error(update, context):
     """Log Errors caused by Updates."""
+    #update.message.reply_text("Sorry I'm not available at the moment.")
     logger.warning('Update "%s" caused error "%s"', update, context.error)
-
-def pollCheck(msgDate):
-    datediff=int((datetime.now(pytz.utc)-msgDate).days)
-    print(datediff)
-    return (datediff==0)
-
 
 def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     #base_url="http://localhost:8081/bot" // Add it to function in order to run Localy
-    updater = Updater(Constants.Api_Key,base_url="http://localhost:8081/bot",use_context=True)
-
-
+    updater = Updater(Constants.Api_Key,use_context=True)
+    #if(flag):
+        #error(error)
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
 
