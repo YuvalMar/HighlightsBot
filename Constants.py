@@ -1,6 +1,5 @@
 from telegram import InlineKeyboardButton
 
-Api_Key="1969164922:AAFarz1cKoaP3l8ONCtK9ae8SU-13tAJljM"
 mainKeyboard = [
 
     [InlineKeyboardButton("Italy Seria A", callback_data='ITALY: Serie A-Leag')],
