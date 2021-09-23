@@ -1,1 +1,0 @@
-worker: pythpn main.py
