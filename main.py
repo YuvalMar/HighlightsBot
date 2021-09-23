@@ -19,7 +19,7 @@ import logging
 
 import os
 PORT = int(os.environ.get('PORT', 5000))
-TOKEN = os.environ["TOKEN"]
+#TOKEN = os.environ["TOKEN"]
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, bot
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
 
@@ -108,6 +108,7 @@ def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     #base_url="http://localhost:8081/bot" // Add it to function in order to run Localy
+    TOKEN = "1969164922:AAFarz1cKoaP3l8ONCtK9ae8SU-13tAJljM"
     updater = Updater(TOKEN,use_context=True)
     #if(flag):
         #error(error)
