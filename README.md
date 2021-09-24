@@ -1,5 +1,6 @@
 # HighlightsBot
-Football Highlights Telegram bot
+Football Highlights Telegram bot.
+
 Hey everyone,
 I'm happy to share my first telegram bot project, GerryTheBot.
 Gerry (named after my dog) allows you to watch and catch up with the latest football highlights from around the world.
